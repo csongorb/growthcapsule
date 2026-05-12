@@ -69,7 +69,7 @@
 
 <div id="collect-section" style="display:none">
   <p>🧫 The Growth Capsule has opened!</p>
-  <p>Yield: <b>+<span id="earned-profit">--</span></b> | New seed count: <b><span id="new-balance">--</span></b></p>
+  <p>Yield: <b>+<span id="earned-profit">--</span></b> | New seed count might be: <b><span id="new-balance">--</span></b></p>
   <p>⚠️ Outside air is degrading the yield — collect in: <b><span id="collect-timer">--</span></b></p>
   <progress id="collect-progress" value="60" max="60"></progress>
   <br><br>
@@ -77,14 +77,17 @@
 </div>
 
 <div id="lost-section" style="display:none">
-  <p>💨 The yield has degraded completely. Your original seeds are safe: <b><span id="kept-balance">--</span></b>.</p>
-  <button onclick="reset()">🔄 Load capsule again</button>
+  <p>💨 The yield has degraded completely.</p>
+  <p><b>Seeds lost:</b> +<span id="lost-profit">--</span></p>
+  <p>Your original seeds are safe: <b><span id="kept-balance">--</span></b>.</p>
+  <button onclick="reset()">🔄 Process your lost</button>
 </div>
 
 <script>
   let money = 1;
   let investedAmount = 0;
   let lastSeconds = 60;
+  let lastProfit = 0;
   let timerInterval = null;
   let collectInterval = null;
 
@@ -162,6 +165,7 @@
     investedAmount = currentMoney;
     const multiplier = Math.pow(1.01, seconds / 60);
     const profit = currentMoney * (multiplier - 1);
+    lastProfit = profit;
     const newBal = currentMoney * multiplier;
 
     const openTime = new Date(Date.now() + seconds * 1000);
@@ -208,6 +212,7 @@
         money = investedAmount;
         document.getElementById("money").textContent = formatNum(money);
         document.getElementById("kept-balance").textContent = formatNum(money);
+        document.getElementById("lost-profit").textContent = formatNum(lastProfit);
         document.getElementById("collect-section").style.display = "none";
         document.getElementById("lost-section").style.display = "block";
       }
