@@ -31,3 +31,12 @@ I have this metaphor I'm just not sure about. I mean it is ok, in a way it works
 ## 2026-05-12b: Playable
 
 Moved everything to Github Pages, now I can test it with people, lets see.
+
+## 2026-05-12c: Works, for me
+
+Ok, this is strange, but I immediately feel a good tension. This one-minute-window is great (in my first ideas I thought the decline should be a curve that I can influence, but this is better). I usually miss it, but I immediately setting up a new timer with big hopes. Obviously, it's very experimental, but I like it. I have also done some research, I couldn't find any idle game that has this combination of *set-your-own-timer* and *you-only-have-a-short-time-to-collect*.
+
+Just a few ideas, I need to leave this project for a while, I have some work to do:
+
+- **keep it simple**, the simplicity is really good, I'm already afraid of adding too much
+- **visualisation**, what I could add is visualisation, some kind of a garden that endlessly grows in the background
