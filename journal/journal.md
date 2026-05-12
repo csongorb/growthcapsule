@@ -27,3 +27,7 @@ It had some good moments:
 
 The only bigger thing I'm not sure about:  
 I have this metaphor I'm just not sure about. I mean it is ok, in a way it works. But it is also just really generic. I would like to have something more *Cow Clicker* like. More abstract, more theory?
+
+## 2026-05-12b: Playable
+
+Moved everything to Github Pages, now I can test it with people, lets see.
