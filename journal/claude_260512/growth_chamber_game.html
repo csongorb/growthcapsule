@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>🔬 The Growth Chamber</h1>
+<p>Place your seeds inside, set the timer, and seal it. The longer the chamber runs, the more your seeds multiply. When it opens, outside air immediately begins destroying the yield — you have <b>1 minute to collect</b> before it degrades completely. Your original seeds are always safe.</p>
+<hr>
+
+<p><b>🌱 Seeds:</b> <span id="money">1.0000</span></p>
+
+<hr>
+
+<div id="invest-section">
+  <p><b>Set the chamber timer:</b></p>
+
+  <label>Timer range:</label>
+  <select id="range-select" onchange="updateRange()">
+    <option value="600">10 minutes</option>
+    <option value="3600">1 hour</option>
+    <option value="43200">12 hours</option>
+    <option value="86400">24 hours</option>
+    <option value="604800">1 week</option>
+    <option value="2592000">1 month</option>
+    <option value="31536000">1 year</option>
+    <option value="157680000">5 years</option>
+    <option value="315360000">10 years</option>
+  </select>
+
+  <br><br>
+  <input type="range" id="duration" min="1" max="600" step="1" value="60" oninput="updateSliderLabel()">
+  <br><br>
+
+  <table border="1" cellpadding="6">
+    <tr>
+      <td>Chamber runtime</td>
+      <td><b><span id="lbl-duration">--</span></b></td>
+    </tr>
+    <tr>
+      <td>Total growth</td>
+      <td><b>+<span id="lbl-pct">--</span>%</b></td>
+    </tr>
+    <tr>
+      <td>Yield</td>
+      <td><b>+<span id="lbl-profit">--</span></b></td>
+    </tr>
+    <tr>
+      <td>Growth rate</td>
+      <td><b>+<span id="lbl-persec">--</span></b> per second</td>
+    </tr>
+    <tr>
+      <td>Growth formula</td>
+      <td>Yield = <span id="lbl-principal">--</span> × (1.01^(<span id="lbl-t">--</span> / 60) − 1)</td>
+    </tr>
+  </table>
+
+  <br>
+  <button onclick="invest()">🔒 Seal & Start Chamber</button>
+</div>
+
+<div id="investing-section" style="display:none">
+  <p><b>⚗️ Growth Chamber is running...</b></p>
+  <p>Chamber opens in: <b><span id="timer">--</span></b></p>
+  <p>Expected yield: <b>+<span id="expected-profit">--</span></b></p>
+  <progress id="progress" value="0" max="100"></progress>
+</div>
+
+<div id="collect-section" style="display:none">
+  <p>🔓 The Growth Chamber has opened!</p>
+  <p>Yield: <b>+<span id="earned-profit">--</span></b> | New seed count: <b><span id="new-balance">--</span></b></p>
+  <p>⚠️ Outside air is degrading the yield — collect in: <b><span id="collect-timer">--</span></b></p>
+  <progress id="collect-progress" value="60" max="60"></progress>
+  <br><br>
+  <button onclick="collect()">🌱 Collect yield!</button>
+</div>
+
+<div id="lost-section" style="display:none">
+  <p>💨 The yield has degraded completely. Your original seeds are safe: <b><span id="kept-balance">--</span></b>.</p>
+  <button onclick="reset()">🔒 Load chamber again</button>
+</div>
+
+<script>
+  let money = 1;
+  let investedAmount = 0;
+  let lastSeconds = 60;
+  let timerInterval = null;
+  let collectInterval = null;
+
+  const TIERS = [
+    { threshold: 1e63,  name: "Vigintillion" },
+    { threshold: 1e60,  name: "Novemdecillion" },
+    { threshold: 1e57,  name: "Octodecillion" },
+    { threshold: 1e54,  name: "Septendecillion" },
+    { threshold: 1e51,  name: "Sexdecillion" },
+    { threshold: 1e48,  name: "Quindecillion" },
+    { threshold: 1e45,  name: "Quattuordecillion" },
+    { threshold: 1e42,  name: "Tredecillion" },
+    { threshold: 1e39,  name: "Duodecillion" },
+    { threshold: 1e36,  name: "Undecillion" },
+    { threshold: 1e33,  name: "Decillion" },
+    { threshold: 1e30,  name: "Nonillion" },
+    { threshold: 1e27,  name: "Octillion" },
+    { threshold: 1e24,  name: "Septillion" },
+    { threshold: 1e21,  name: "Sextillion" },
+    { threshold: 1e18,  name: "Quintillion" },
+    { threshold: 1e15,  name: "Quadrillion" },
+    { threshold: 1e12,  name: "Trillion" },
+    { threshold: 1e9,   name: "Billion" },
+    { threshold: 1e6,   name: "Million" },
+    { threshold: 1e3,   name: "Thousand" },
+  ];
+
+  function formatNum(n) {
+    if (n === null || n === undefined || isNaN(n)) return "--";
+    for (const tier of TIERS) {
+      if (Math.abs(n) >= tier.threshold) {
+        return (n / tier.threshold).toFixed(4) + " " + tier.name;
+      }
+    }
+    return n.toFixed(6);
+  }
+
+  function updateRange() {
+    const maxSec = parseInt(document.getElementById("range-select").value);
+    const slider = document.getElementById("duration");
+    slider.max = maxSec;
+    slider.step = Math.max(1, Math.floor(maxSec / 1000));
+    slider.value = Math.floor(maxSec / 2);
+    updateSliderLabel();
+  }
+
+  function updateSliderLabel() {
+    const seconds = parseInt(document.getElementById("duration").value);
+    const principal = money;
+    const multiplier = Math.pow(1.01, seconds / 60);
+    const growthFactor = multiplier - 1;
+    const profit = principal * growthFactor;
+    const profitPerSecond = profit / seconds;
+
+    document.getElementById("lbl-duration").textContent = formatDuration(seconds);
+    document.getElementById("lbl-pct").textContent = (growthFactor * 100).toFixed(4);
+    document.getElementById("lbl-profit").textContent = formatNum(profit);
+    document.getElementById("lbl-persec").textContent = formatNum(profitPerSecond);
+    document.getElementById("lbl-principal").textContent = formatNum(principal);
+    document.getElementById("lbl-t").textContent = seconds;
+    document.getElementById("money").textContent = formatNum(money);
+  }
+
+  function invest() {
+    lastSeconds = parseInt(document.getElementById("duration").value);
+    const seconds = lastSeconds;
+    const currentMoney = money;
+    investedAmount = currentMoney;
+    const multiplier = Math.pow(1.01, seconds / 60);
+    const profit = currentMoney * (multiplier - 1);
+    const newBal = currentMoney * multiplier;
+
+    document.getElementById("invest-section").style.display = "none";
+    document.getElementById("investing-section").style.display = "block";
+    document.getElementById("expected-profit").textContent = formatNum(profit);
+
+    let elapsed = 0;
+    document.getElementById("timer").textContent = formatDuration(seconds);
+    document.getElementById("progress").max = seconds;
+    document.getElementById("progress").value = 0;
+
+    timerInterval = setInterval(function() {
+      elapsed++;
+      const remaining = seconds - elapsed;
+      document.getElementById("timer").textContent = formatDuration(remaining);
+      document.getElementById("progress").value = elapsed;
+
+      if (elapsed >= seconds) {
+        clearInterval(timerInterval);
+        document.getElementById("investing-section").style.display = "none";
+        document.getElementById("collect-section").style.display = "block";
+        document.getElementById("earned-profit").textContent = formatNum(profit);
+        document.getElementById("new-balance").textContent = formatNum(newBal);
+        startCollectCountdown(newBal);
+      }
+    }, 1000);
+  }
+
+  function startCollectCountdown(newBalance) {
+    let remaining = 60;
+    document.getElementById("collect-timer").textContent = remaining + "s";
+    document.getElementById("collect-progress").value = remaining;
+
+    collectInterval = setInterval(function() {
+      remaining--;
+      document.getElementById("collect-timer").textContent = remaining + "s";
+      document.getElementById("collect-progress").value = remaining;
+
+      if (remaining <= 0) {
+        clearInterval(collectInterval);
+        money = investedAmount;
+        document.getElementById("money").textContent = formatNum(money);
+        document.getElementById("kept-balance").textContent = formatNum(money);
+        document.getElementById("collect-section").style.display = "none";
+        document.getElementById("lost-section").style.display = "block";
+      }
+    }, 1000);
+  }
+
+  function collect() {
+    clearInterval(collectInterval);
+    money = investedAmount * Math.pow(1.01, lastSeconds / 60);
+    document.getElementById("money").textContent = formatNum(money);
+    document.getElementById("collect-section").style.display = "none";
+    document.getElementById("invest-section").style.display = "block";
+    updateSliderLabel();
+  }
+
+  function reset() {
+    document.getElementById("lost-section").style.display = "none";
+    document.getElementById("invest-section").style.display = "block";
+    updateSliderLabel();
+  }
+
+  function formatDuration(totalSeconds) {
+    if (totalSeconds < 60) return totalSeconds + "s";
+    const years = Math.floor(totalSeconds / 31536000);
+    const months = Math.floor((totalSeconds % 31536000) / 2592000);
+    const weeks = Math.floor((totalSeconds % 2592000) / 604800);
+    const days = Math.floor((totalSeconds % 604800) / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    let parts = [];
+    if (years > 0) parts.push(years + "y");
+    if (months > 0) parts.push(months + "mo");
+    if (weeks > 0) parts.push(weeks + "w");
+    if (days > 0) parts.push(days + "d");
+    if (hours > 0) parts.push(hours + "h");
+    if (minutes > 0) parts.push(minutes + "m");
+    if (seconds > 0 && years === 0 && months === 0) parts.push(seconds + "s");
+    return parts.join(" ");
+  }
+
+  updateSliderLabel();
+</script>
+
+</body>
+</html>

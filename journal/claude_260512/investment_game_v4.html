@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>💰 Investment Game</h1>
+<p><b>⚠️ Warning:</b> Once your investment matures, you have only <b>1 minute</b> to collect — or you lose your profit!</p>
+<hr>
+
+<p><b>Balance:</b> <span id="money">1.0000</span></p>
+
+<hr>
+
+<div id="invest-section">
+  <p><b>Invest for how long?</b></p>
+
+  <label>Slider range:</label>
+  <select id="range-select" onchange="updateRange()">
+    <option value="600">10 minutes</option>
+    <option value="3600">1 hour</option>
+    <option value="43200">12 hours</option>
+    <option value="86400">24 hours</option>
+    <option value="604800">1 week</option>
+    <option value="2592000">1 month</option>
+    <option value="31536000">1 year</option>
+    <option value="157680000">5 years</option>
+    <option value="315360000">10 years</option>
+  </select>
+
+  <br><br>
+  <input type="range" id="duration" min="1" max="600" step="1" value="60" oninput="updateSliderLabel()">
+  <br><br>
+  <span id="slider-label"></span>
+
+  <br><br>
+  <button onclick="invest()">Invest!</button>
+</div>
+
+<div id="investing-section" style="display:none">
+  <p><b>⏳ Investing...</b></p>
+  <p>Time remaining: <b><span id="timer">--</span></b></p>
+  <p>Expected profit: <b>+<span id="expected-profit">--</span></b></p>
+  <progress id="progress" value="0" max="100"></progress>
+</div>
+
+<div id="collect-section" style="display:none">
+  <p>✅ Investment matured!</p>
+  <p>Profit: <b>+<span id="earned-profit">--</span></b> | New balance: <b><span id="new-balance">--</span></b></p>
+  <p>⚠️ Collect within: <b><span id="collect-timer">--</span></b> or lose your profit!</p>
+  <progress id="collect-progress" value="60" max="60"></progress>
+  <br><br>
+  <button onclick="collect()">Collect!</button>
+</div>
+
+<div id="lost-section" style="display:none">
+  <p>💸 Too slow! You lost your profit. Your balance stays at <b><span id="kept-balance">--</span></b>.</p>
+  <button onclick="reset()">Try again</button>
+</div>
+
+<script>
+  let money = 1;
+  let investedAmount = 0;
+  let timerInterval = null;
+  let collectInterval = null;
+
+  function updateRange() {
+    const maxSec = parseInt(document.getElementById("range-select").value);
+    const slider = document.getElementById("duration");
+    slider.max = maxSec;
+    slider.step = Math.max(1, Math.floor(maxSec / 1000));
+    slider.value = Math.floor(maxSec / 2);
+    updateSliderLabel();
+  }
+
+  function updateSliderLabel() {
+    const seconds = parseInt(document.getElementById("duration").value);
+    const currentMoney = parseFloat(document.getElementById("money").textContent);
+    const ratePerSecond = Math.pow(1.1, 1/60);
+    const multiplier = Math.pow(ratePerSecond, seconds);
+    const profit = currentMoney * (multiplier - 1);
+    const profitPerSecond = profit / seconds;
+
+    document.getElementById("slider-label").innerHTML =
+      "<b>" + formatDuration(seconds) + "</b>" +
+      " &rarr; +" + ((multiplier - 1) * 100).toFixed(2) + "%" +
+      " | profit: <b>+" + profit.toFixed(4) + "</b>" +
+      " | <b>+" + profitPerSecond.toFixed(6) + "</b> profit/sec";
+  }
+
+  function invest() {
+    const seconds = parseInt(document.getElementById("duration").value);
+    const currentMoney = parseFloat(document.getElementById("money").textContent);
+    investedAmount = currentMoney;
+    const ratePerSecond = Math.pow(1.1, 1/60);
+    const multiplier = Math.pow(ratePerSecond, seconds);
+    const profit = (currentMoney * (multiplier - 1)).toFixed(4);
+    const newBal = (currentMoney * multiplier).toFixed(4);
+
+    document.getElementById("invest-section").style.display = "none";
+    document.getElementById("investing-section").style.display = "block";
+    document.getElementById("expected-profit").textContent = profit;
+
+    let elapsed = 0;
+    document.getElementById("timer").textContent = formatDuration(seconds);
+    document.getElementById("progress").max = seconds;
+    document.getElementById("progress").value = 0;
+
+    timerInterval = setInterval(function() {
+      elapsed++;
+      const remaining = seconds - elapsed;
+      document.getElementById("timer").textContent = formatDuration(remaining);
+      document.getElementById("progress").value = elapsed;
+
+      if (elapsed >= seconds) {
+        clearInterval(timerInterval);
+        document.getElementById("investing-section").style.display = "none";
+        document.getElementById("collect-section").style.display = "block";
+        document.getElementById("earned-profit").textContent = profit;
+        document.getElementById("new-balance").textContent = newBal;
+        startCollectCountdown(parseFloat(newBal));
+      }
+    }, 1000);
+  }
+
+  function startCollectCountdown(newBalance) {
+    let remaining = 60;
+    document.getElementById("collect-timer").textContent = remaining + "s";
+    document.getElementById("collect-progress").value = remaining;
+
+    collectInterval = setInterval(function() {
+      remaining--;
+      document.getElementById("collect-timer").textContent = remaining + "s";
+      document.getElementById("collect-progress").value = remaining;
+
+      if (remaining <= 0) {
+        clearInterval(collectInterval);
+        money = investedAmount;
+        document.getElementById("money").textContent = money.toFixed(4);
+        document.getElementById("kept-balance").textContent = money.toFixed(4);
+        document.getElementById("collect-section").style.display = "none";
+        document.getElementById("lost-section").style.display = "block";
+      }
+    }, 1000);
+  }
+
+  function collect() {
+    clearInterval(collectInterval);
+    money = parseFloat(document.getElementById("new-balance").textContent);
+    document.getElementById("money").textContent = money.toFixed(4);
+    document.getElementById("collect-section").style.display = "none";
+    document.getElementById("invest-section").style.display = "block";
+    updateSliderLabel();
+  }
+
+  function reset() {
+    document.getElementById("lost-section").style.display = "none";
+    document.getElementById("invest-section").style.display = "block";
+    updateSliderLabel();
+  }
+
+  function formatDuration(totalSeconds) {
+    if (totalSeconds < 60) return totalSeconds + "s";
+    const years = Math.floor(totalSeconds / 31536000);
+    const months = Math.floor((totalSeconds % 31536000) / 2592000);
+    const weeks = Math.floor((totalSeconds % 2592000) / 604800);
+    const days = Math.floor((totalSeconds % 604800) / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    let parts = [];
+    if (years > 0) parts.push(years + "y");
+    if (months > 0) parts.push(months + "mo");
+    if (weeks > 0) parts.push(weeks + "w");
+    if (days > 0) parts.push(days + "d");
+    if (hours > 0) parts.push(hours + "h");
+    if (minutes > 0) parts.push(minutes + "m");
+    if (seconds > 0 && years === 0 && months === 0) parts.push(seconds + "s");
+    return parts.join(" ");
+  }
+
+  // Init
+  updateSliderLabel();
+</script>
+
+</body>
+</html>

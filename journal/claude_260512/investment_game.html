@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>💰 Investment Game</h1>
+<hr>
+
+<p><b>Money:</b> <span id="money">1.00</span></p>
+
+<hr>
+
+<div id="invest-section">
+  <p><b>Invest for how many minutes?</b></p>
+  <select id="duration">
+    <option value="1">1 minute (+10%)</option>
+    <option value="2">2 minutes (+21%)</option>
+    <option value="3">3 minutes (+33%)</option>
+    <option value="4">4 minutes (+46%)</option>
+    <option value="5">5 minutes (+61%)</option>
+    <option value="6">6 minutes (+77%)</option>
+    <option value="7">7 minutes (+95%)</option>
+    <option value="8">8 minutes (+114%)</option>
+    <option value="9">9 minutes (+136%)</option>
+    <option value="10">10 minutes (+159%)</option>
+  </select>
+  <br><br>
+  <button onclick="invest()">Invest!</button>
+</div>
+
+<div id="investing-section" style="display:none">
+  <p><b>⏳ Investing...</b></p>
+  <p>Time remaining: <b><span id="timer">--</span></b></p>
+  <p>Expected return: <b><span id="expected">--</span></b></p>
+  <progress id="progress" value="0" max="100"></progress>
+</div>
+
+<div id="collect-section" style="display:none">
+  <p>✅ Investment matured! You earned: <b><span id="earned">--</span></b></p>
+  <button onclick="collect()">Collect & play again</button>
+</div>
+
+<script>
+  let money = 1;
+  let timerInterval = null;
+
+  function invest() {
+    const minutes = parseInt(document.getElementById("duration").value);
+    const multiplier = Math.pow(1.1, minutes);
+    const expectedReturn = (money * multiplier).toFixed(2);
+
+    document.getElementById("invest-section").style.display = "none";
+    document.getElementById("investing-section").style.display = "block";
+    document.getElementById("expected").textContent = expectedReturn;
+
+    const totalSeconds = minutes * 60;
+    let elapsed = 0;
+
+    document.getElementById("timer").textContent = formatTime(totalSeconds);
+    document.getElementById("progress").max = totalSeconds;
+    document.getElementById("progress").value = 0;
+
+    timerInterval = setInterval(function() {
+      elapsed++;
+      const remaining = totalSeconds - elapsed;
+      document.getElementById("timer").textContent = formatTime(remaining);
+      document.getElementById("progress").value = elapsed;
+
+      if (elapsed >= totalSeconds) {
+        clearInterval(timerInterval);
+        money = parseFloat(expectedReturn);
+        document.getElementById("money").textContent = money.toFixed(2);
+        document.getElementById("investing-section").style.display = "none";
+        document.getElementById("collect-section").style.display = "block";
+        document.getElementById("earned").textContent = expectedReturn;
+      }
+    }, 1000);
+  }
+
+  function collect() {
+    document.getElementById("collect-section").style.display = "none";
+    document.getElementById("invest-section").style.display = "block";
+    document.getElementById("money").textContent = money.toFixed(2);
+  }
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m + "m " + (s < 10 ? "0" : "") + s + "s";
+  }
+</script>
+
+</body>
+</html>

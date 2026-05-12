@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1>💰 Investment Game</h1>
+<hr>
+
+<p><b>Money:</b> <span id="money">1.00</span></p>
+
+<hr>
+
+<div id="invest-section">
+  <p><b>Invest for how many minutes?</b></p>
+
+  <input type="range" id="duration" min="1" max="10" value="1" oninput="updateSliderLabel()">
+  <br><br>
+  <span id="slider-label"></span>
+
+  <br><br>
+  <button onclick="invest()">Invest!</button>
+</div>
+
+<div id="investing-section" style="display:none">
+  <p><b>⏳ Investing...</b></p>
+  <p>Time remaining: <b><span id="timer">--</span></b></p>
+  <p>Expected return: <b><span id="expected">--</span></b></p>
+  <progress id="progress" value="0" max="100"></progress>
+</div>
+
+<div id="collect-section" style="display:none">
+  <p>✅ Investment matured! You earned: <b><span id="earned">--</span></b></p>
+  <p>⚠️ Collect within: <b><span id="collect-timer">--</span></b> or lose your returns!</p>
+  <progress id="collect-progress" value="60" max="60"></progress>
+  <br><br>
+  <button onclick="collect()">Collect!</button>
+</div>
+
+<div id="lost-section" style="display:none">
+  <p>💸 Too slow! You lost your returns. You keep your original investment.</p>
+  <button onclick="reset()">Try again</button>
+</div>
+
+<script>
+  let money = 1;
+  let investedAmount = 0;
+  let timerInterval = null;
+  let collectInterval = null;
+
+  function updateSliderLabel() {
+    const minutes = parseInt(document.getElementById("duration").value);
+    const multiplier = Math.pow(1.1, minutes);
+    const currentMoney = parseFloat(document.getElementById("money").textContent);
+    const expectedReturn = currentMoney * multiplier;
+    const perSecond = (expectedReturn - currentMoney) / (minutes * 60);
+
+    document.getElementById("slider-label").innerHTML =
+      "<b>" + minutes + " minute" + (minutes > 1 ? "s" : "") + "</b>" +
+      " &rarr; +" + ((multiplier - 1) * 100).toFixed(1) + "%" +
+      " | return: <b>" + expectedReturn.toFixed(2) + "</b>" +
+      " | <b>+" + perSecond.toFixed(4) + "</b> per second";
+  }
+
+  function invest() {
+    const minutes = parseInt(document.getElementById("duration").value);
+    const multiplier = Math.pow(1.1, minutes);
+    const currentMoney = parseFloat(document.getElementById("money").textContent);
+    investedAmount = currentMoney;
+    const expectedReturn = (currentMoney * multiplier).toFixed(2);
+
+    document.getElementById("invest-section").style.display = "none";
+    document.getElementById("investing-section").style.display = "block";
+    document.getElementById("expected").textContent = expectedReturn;
+
+    const totalSeconds = minutes * 60;
+    let elapsed = 0;
+
+    document.getElementById("timer").textContent = formatTime(totalSeconds);
+    document.getElementById("progress").max = totalSeconds;
+    document.getElementById("progress").value = 0;
+
+    timerInterval = setInterval(function() {
+      elapsed++;
+      const remaining = totalSeconds - elapsed;
+      document.getElementById("timer").textContent = formatTime(remaining);
+      document.getElementById("progress").value = elapsed;
+
+      if (elapsed >= totalSeconds) {
+        clearInterval(timerInterval);
+        document.getElementById("investing-section").style.display = "none";
+        document.getElementById("collect-section").style.display = "block";
+        document.getElementById("earned").textContent = expectedReturn;
+        startCollectCountdown(parseFloat(expectedReturn));
+      }
+    }, 1000);
+  }
+
+  function startCollectCountdown(earned) {
+    let remaining = 60;
+    document.getElementById("collect-timer").textContent = remaining + "s";
+    document.getElementById("collect-progress").value = remaining;
+
+    collectInterval = setInterval(function() {
+      remaining--;
+      document.getElementById("collect-timer").textContent = remaining + "s";
+      document.getElementById("collect-progress").value = remaining;
+
+      if (remaining <= 0) {
+        clearInterval(collectInterval);
+        // Player loses returns, keeps original investment
+        money = investedAmount;
+        document.getElementById("money").textContent = money.toFixed(2);
+        document.getElementById("collect-section").style.display = "none";
+        document.getElementById("lost-section").style.display = "block";
+      }
+    }, 1000);
+  }
+
+  function collect() {
+    clearInterval(collectInterval);
+    money = parseFloat(document.getElementById("earned").textContent);
+    document.getElementById("money").textContent = money.toFixed(2);
+    document.getElementById("collect-section").style.display = "none";
+    document.getElementById("invest-section").style.display = "block";
+    updateSliderLabel();
+  }
+
+  function reset() {
+    document.getElementById("lost-section").style.display = "none";
+    document.getElementById("invest-section").style.display = "block";
+    updateSliderLabel();
+  }
+
+  function formatTime(seconds) {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m + "m " + (s < 10 ? "0" : "") + s + "s";
+  }
+
+  // Init label
+  updateSliderLabel();
+</script>
+
+</body>
+</html>
