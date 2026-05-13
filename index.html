@@ -8,7 +8,7 @@
   Your original seeds are always safe.</p>
 <hr>
 
-<p><b>🌱 Seeds:</b> <span id="money">1.0000</span></p>
+<p><b>🌱 Seeds:</b> <span id="money">1.0000</span> <small>(Lost: <span id="lost-total">0</span>)</small></p>
 
 <hr>
 
@@ -79,7 +79,6 @@
 <div id="lost-section" style="display:none">
   <p>💨 The yield has degraded completely.</p>
   <p><b>Seeds lost:</b> +<span id="lost-profit">--</span></p>
-  <p>Your original seeds are safe: <b><span id="kept-balance">--</span></b>.</p>
   <button onclick="reset()">🔄 Process your lost</button>
 </div>
 
@@ -88,6 +87,7 @@
   let investedAmount = 0;
   let lastSeconds = 60;
   let lastProfit = 0;
+  let totalLost = 0;
   let timerInterval = null;
   let collectInterval = null;
 
@@ -156,6 +156,7 @@
     document.getElementById("lbl-principal").textContent = formatNum(principal);
     document.getElementById("lbl-t").textContent = seconds;
     document.getElementById("money").textContent = formatNum(money);
+    document.getElementById("lost-total").textContent = formatNum(totalLost);
   }
 
   function invest() {
@@ -211,7 +212,6 @@
         clearInterval(collectInterval);
         money = investedAmount;
         document.getElementById("money").textContent = formatNum(money);
-        document.getElementById("kept-balance").textContent = formatNum(money);
         document.getElementById("lost-profit").textContent = formatNum(lastProfit);
         document.getElementById("collect-section").style.display = "none";
         document.getElementById("lost-section").style.display = "block";
@@ -229,6 +229,8 @@
   }
 
   function reset() {
+    totalLost += lastProfit;
+    document.getElementById("lost-total").textContent = formatNum(totalLost);
     document.getElementById("lost-section").style.display = "none";
     document.getElementById("invest-section").style.display = "block";
     updateSliderLabel();
