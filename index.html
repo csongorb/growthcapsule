@@ -65,6 +65,8 @@
   <p>Capsule opens in: <b><span id="timer">--</span></b> (at <b><span id="open-time">--</span></b>)</p>
   <p>Expected yield: <b>+<span id="expected-profit">--</span></b></p>
   <progress id="progress" value="0" max="100"></progress>
+  <br><br>
+  <button onclick="cancelInvestment()">❌ Open Capsule (you will lose your yield)</button>
 </div>
 
 <div id="collect-section" style="display:none">
@@ -77,7 +79,7 @@
 </div>
 
 <div id="lost-section" style="display:none">
-  <p>💨 The yield has degraded completely.</p>
+  <p>💨 The yield has degraded.</p>
   <p><b>Seeds lost:</b> +<span id="lost-profit">--</span></p>
   <button onclick="reset()">🔄 Process your lost</button>
 </div>
@@ -88,6 +90,8 @@
   let lastSeconds = 60;
   let lastProfit = 0;
   let totalLost = 0;
+  let elapsed = 0;
+  let isRunning = false;
   let timerInterval = null;
   let collectInterval = null;
 
@@ -176,12 +180,14 @@
     document.getElementById("investing-section").style.display = "block";
     document.getElementById("expected-profit").textContent = formatNum(profit);
 
-    let elapsed = 0;
+    elapsed = 0;
+    isRunning = true;
     document.getElementById("timer").textContent = formatDuration(seconds);
     document.getElementById("progress").max = seconds;
     document.getElementById("progress").value = 0;
 
     timerInterval = setInterval(function() {
+      if (!isRunning) return;
       elapsed++;
       const remaining = seconds - elapsed;
       document.getElementById("timer").textContent = formatDuration(remaining);
@@ -189,6 +195,8 @@
 
       if (elapsed >= seconds) {
         clearInterval(timerInterval);
+        timerInterval = null;
+        isRunning = false;
         document.getElementById("investing-section").style.display = "none";
         document.getElementById("collect-section").style.display = "block";
         document.getElementById("earned-profit").textContent = formatNum(profit);
@@ -226,6 +234,17 @@
     document.getElementById("collect-section").style.display = "none";
     document.getElementById("invest-section").style.display = "block";
     updateSliderLabel();
+  }
+
+  function cancelInvestment() {
+    isRunning = false;
+    clearInterval(timerInterval);
+    timerInterval = null;
+    const actualProfit = investedAmount * (Math.pow(1.01, elapsed / 60) - 1);
+    lastProfit = actualProfit;
+    document.getElementById("lost-profit").textContent = formatNum(lastProfit);
+    document.getElementById("investing-section").style.display = "none";
+    document.getElementById("lost-section").style.display = "block";
   }
 
   function reset() {
