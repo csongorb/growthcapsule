@@ -24,9 +24,9 @@
     <option value="86400">24 hours</option>
     <option value="604800">1 week</option>
     <option value="2592000">1 month</option>
-    <option value="31536000">1 year</option>
-    <option value="157680000">5 years</option>
-    <option value="315360000">10 years</option>
+    <option value="31536000" disabled>1 year</option>
+    <option value="157680000" disabled>5 years</option>
+    <option value="315360000" disabled>10 years</option>
   </select>
 
   <br><br>
@@ -96,6 +96,41 @@
   let collectInterval = null;
 
   const TIERS = [
+    { threshold: 1e168, name: "Sexquinquagintillion" },
+    { threshold: 1e165, name: "Quinquinquagintillion" },
+    { threshold: 1e162, name: "Quattuorquinquagintillion" },
+    { threshold: 1e159, name: "Trequinquagintillion" },
+    { threshold: 1e156, name: "Duoquinquagintillion" },
+    { threshold: 1e153, name: "Unquinquagintillion" },
+    { threshold: 1e150, name: "Novemquadragintillion" },
+    { threshold: 1e147, name: "Octoquadragintillion" },
+    { threshold: 1e144, name: "Septenquadragintillion" },
+    { threshold: 1e141, name: "Sexquadragintillion" },
+    { threshold: 1e138, name: "Quinquadragintillion" },
+    { threshold: 1e135, name: "Quattuorquadragintillion" },
+    { threshold: 1e132, name: "Trequadragintillion" },
+    { threshold: 1e129, name: "Duoquadragintillion" },
+    { threshold: 1e126, name: "Unquadragintillion" },
+    { threshold: 1e123, name: "Quadragintillion" },
+    { threshold: 1e120, name: "Novemtrigintillion" },
+    { threshold: 1e117, name: "Octotrigintillion" },
+    { threshold: 1e114, name: "Septentrigintillion" },
+    { threshold: 1e111, name: "Sextrigintillion" },
+    { threshold: 1e108, name: "Quintrigintillion" },
+    { threshold: 1e105, name: "Quattuortrigintillion" },
+    { threshold: 1e102, name: "Tretrigintillion" },
+    { threshold: 1e99,  name: "Duotrigintillion" },
+    { threshold: 1e96,  name: "Untrigintillion" },
+    { threshold: 1e93,  name: "Trigintillion" },
+    { threshold: 1e90,  name: "Novemvigintillion" },
+    { threshold: 1e87,  name: "Octovigintillion" },
+    { threshold: 1e84,  name: "Septenvigintillion" },
+    { threshold: 1e81,  name: "Sexvigintillion" },
+    { threshold: 1e78,  name: "Quinvigintillion" },
+    { threshold: 1e75,  name: "Quattuorvigintillion" },
+    { threshold: 1e72,  name: "Trevigintillion" },
+    { threshold: 1e69,  name: "Duovigintillion" },
+    { threshold: 1e66,  name: "Unvigintillion" },
     { threshold: 1e63,  name: "Vigintillion" },
     { threshold: 1e60,  name: "Novemdecillion" },
     { threshold: 1e57,  name: "Octodecillion" },
