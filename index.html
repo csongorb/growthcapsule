@@ -139,9 +139,10 @@
   function updateRange() {
     const maxSec = parseInt(document.getElementById("range-select").value);
     const slider = document.getElementById("duration");
+    const currentSeconds = parseInt(slider.value);
     slider.max = maxSec;
-    slider.step = Math.max(1, Math.floor(maxSec / 1000));
-    slider.value = Math.floor(maxSec / 2);
+    slider.step = 1;
+    slider.value = Math.min(currentSeconds, maxSec);
     updateSliderLabel();
   }
 
