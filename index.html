@@ -136,6 +136,33 @@
     return h + ":" + m + ":" + s;
   }
 
+  function setCookie(name, value, days = 365) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires.toUTCString()};path=/`;
+  }
+
+  function getCookie(name) {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
+  }
+
+  function loadState() {
+    const savedMoney = parseFloat(getCookie("seed_total"));
+    if (!isNaN(savedMoney)) {
+      money = savedMoney;
+    }
+    const savedLost = parseFloat(getCookie("seed_lost_total"));
+    if (!isNaN(savedLost)) {
+      totalLost = savedLost;
+    }
+  }
+
+  function saveState() {
+    setCookie("seed_total", money);
+    setCookie("seed_lost_total", totalLost);
+  }
+
   function updateRange() {
     const maxSec = parseInt(document.getElementById("range-select").value);
     const slider = document.getElementById("duration");
@@ -163,6 +190,9 @@
     document.getElementById("money").textContent = formatNum(money);
     document.getElementById("lost-total").textContent = formatNum(totalLost);
   }
+
+  loadState();
+  updateSliderLabel();
 
   function invest() {
     lastSeconds = parseInt(document.getElementById("duration").value);
@@ -232,6 +262,7 @@
     clearInterval(collectInterval);
     money = investedAmount * Math.pow(1.01, lastSeconds / 60);
     document.getElementById("money").textContent = formatNum(money);
+    saveState();
     document.getElementById("collect-section").style.display = "none";
     document.getElementById("invest-section").style.display = "block";
     updateSliderLabel();
@@ -251,6 +282,7 @@
   function reset() {
     totalLost += lastProfit;
     document.getElementById("lost-total").textContent = formatNum(totalLost);
+    saveState();
     document.getElementById("lost-section").style.display = "none";
     document.getElementById("invest-section").style.display = "block";
     updateSliderLabel();
@@ -277,7 +309,6 @@
     return parts.join(" ");
   }
 
-  updateSliderLabel();
 </script>
 
 </body>
