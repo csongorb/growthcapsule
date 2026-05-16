@@ -1,6 +1,12 @@
-let money = 1;
+const DEFAULT_MONEY = 1;
+const GROWTH_FACTOR_PER_INTERVAL = 1.01;
+const GROWTH_INTERVAL_SECONDS = 360;
+const DEFAULT_INVEST_DURATION = 60;
+const COLLECT_TIME_SECONDS = 60;
+
+let money = DEFAULT_MONEY;
 let investedAmount = 0;
-let lastSeconds = 60;
+let lastSeconds = DEFAULT_INVEST_DURATION;
 let lastProfit = 0;
 let totalLost = 0;
 let elapsed = 0;
@@ -124,7 +130,7 @@ function updateRange() {
 function updateSliderLabel() {
   const seconds = parseInt(document.getElementById("duration").value);
   const principal = money;
-  const multiplier = Math.pow(1.01, seconds / 60);
+  const multiplier = Math.pow(GROWTH_FACTOR_PER_INTERVAL, seconds / GROWTH_INTERVAL_SECONDS);
   const growthFactor = multiplier - 1;
   const profit = principal * growthFactor;
   const profitPerSecond = profit / seconds;
@@ -147,7 +153,7 @@ function invest() {
   const seconds = lastSeconds;
   const currentMoney = money;
   investedAmount = currentMoney;
-  const multiplier = Math.pow(1.01, seconds / 60);
+  const multiplier = Math.pow(GROWTH_FACTOR_PER_INTERVAL, seconds / GROWTH_INTERVAL_SECONDS);
   const profit = currentMoney * (multiplier - 1);
   lastProfit = profit;
   const newBal = currentMoney * multiplier;
@@ -186,7 +192,7 @@ function invest() {
 }
 
 function startCollectCountdown(newBalance) {
-  let remaining = 60;
+  let remaining = COLLECT_TIME_SECONDS;
   document.getElementById("collect-timer").textContent = remaining + "s";
   document.getElementById("collect-progress").value = remaining;
 
@@ -208,7 +214,7 @@ function startCollectCountdown(newBalance) {
 
 function collect() {
   clearInterval(collectInterval);
-  money = investedAmount * Math.pow(1.01, lastSeconds / 60);
+  money = investedAmount * Math.pow(GROWTH_FACTOR_PER_INTERVAL, lastSeconds / GROWTH_INTERVAL_SECONDS);
   document.getElementById("money").textContent = formatNum(money);
   saveState();
   document.getElementById("collect-section").style.display = "none";
@@ -220,7 +226,7 @@ function cancelInvestment() {
   isRunning = false;
   clearInterval(timerInterval);
   timerInterval = null;
-  const actualProfit = investedAmount * (Math.pow(1.01, elapsed / 60) - 1);
+  const actualProfit = investedAmount * (Math.pow(GROWTH_FACTOR_PER_INTERVAL, elapsed / GROWTH_INTERVAL_SECONDS) - 1);
   lastProfit = actualProfit;
   document.getElementById("lost-profit").textContent = formatNum(lastProfit);
   document.getElementById("investing-section").style.display = "none";
