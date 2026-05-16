@@ -40,3 +40,29 @@ Just a few ideas, I need to leave this project for a while, I have some work to 
 
 - **keep it simple**, the simplicity is really good, I'm already afraid of adding too much
 - **visualisation**, what I could add is visualisation, some kind of a garden that endlessly grows in the background
+
+## 2026-05-16: Amaze
+
+No, I don't like the exponential / incremental growth, that's for sure. I don't like the un-reflected feedback loop, even if it's not money, but nature. But unfortunately I also don't see a clear solution emerging. That's the work part of design I guess?
+
+It's funny to have something like this on your mind when visiting A MAZE. / Berlin and talking to so many inspiring people and seeing all the nominees and the winners (https://2026.amaze-berlin.de/nominees/). And realising that this idea is, at it's core, about psychology of time and memory and interaction, and that connecting it to a fiction changes everything.
+
+So what to do?  
+I don't know, just a few ideas:
+
+If I play the game properly for a while: I tend to lose more than I win. Would it be enough to just reduce the total number of seeds by the amount of loss?  
+Or: each new capsule always starts with one (1.0) and the end-result gets added to the total. Would cause a much flatter curve *and* would add to the motivation to go longer.  
+In this case, I could also limit the possible (new) yield to the amount of the existing total number of seeds... this would result in a gradual increase of the time and prevent me (in a logical way) to start the game with a 1-year capsule.  
+Sounds good, but this all still goes with the metaphor of the Growth Capsule...
+
+I could go more abstract:  
+Let's just collect time. Each capsule collects time. The goal is to collect as much (remembered-)time as possible.  
+Or: each capsule is a plan to click at a specific point in time. Will you be able to carry out your plan? Will it bother your subconscious? Will you be able to remember to do it (can I check how much of the time the player had the browser in/active?)?  
+Do this ideas have enough tension?
+
+I really liked this a lot:  
+You are an AI (or just a person) overseeing the hibernation of some astronauts. With each new capsule, you send them further out. Each astronaut could have a randomly generated name. If you miss to check-in on time, they die.  
+A roguelike. How far can you send them?  
+Speed is incremental? You add to the speed with each stretch? Each stretch IS the distance?
+
+Lots of ideas. No direction.
