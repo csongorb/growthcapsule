@@ -79,7 +79,7 @@ function renderHistory() {
     } else if (entry.status === "missed") {
       entryHtml += `<p><strong>Catch lost: ${timeframe}</strong></p>`;
       entryHtml += `<p>Start: ${start}</p>`;
-      entryHtml += `<p>End: ${end} — not collected properly.</p>`;
+      entryHtml += `<p>End: ${end} — not collected.</p>`;
     }
 
     entryHtml += '</div>';
@@ -167,7 +167,6 @@ function startCatch() {
       document.getElementById("catching-section").style.display = "none";
       document.getElementById("collect-section").style.display = "block";
       document.getElementById("captured-time").textContent = formatDuration(seconds);
-      document.getElementById("new-total").textContent = formatDuration(newTotal);
       startCollectCountdown(newTotal);
     }
   }, 1000);

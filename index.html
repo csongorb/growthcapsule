@@ -7,12 +7,13 @@
 <body>
 
 <h1>🦋 Catching Time</h1>
-<p>Time goes by. Catch as much as you can.<br/>
-  The longer you wait, the more you collect.<br/>
-  You only have <b>1 minute</b> to catch the collected time. If you miss, time is gone forever.<br/>
+<p>Time flies by. Catch as much as you can.<br/>
+  The longer you wait, the more you catch.<br/>
+  You only have <b>1 minute</b> to collect the caught time.<br/>
+  If you miss, that time is gone forever.<br/>
 <hr>
 
-<p><b>⏳ Time caught (total):</b> <span id="caught-total">0s</span> <small>(Lost: <span id="lost-total">0s</span>)</small></p>
+<p><b>⏳ Time collected (total):</b> <span id="caught-total">0s</span> <small>(Lost: <span id="lost-total">0s</span>)</small></p>
 
 <hr>
 
@@ -58,13 +59,13 @@
   <p>Time to catch: <b><span id="expected-time">--</span></b></p>
   <progress id="progress" value="0" max="100"></progress>
   <br><br>
-  <button onclick="cancelCatch()">❌ Stop catching (lose collected time)</button>
+  <button onclick="cancelCatch()">❌ Stop catching (lose already caught time)</button>
 </div>
 
 <div id="collect-section" style="display:none">
-  <p>🧫 The catch window is open!</p>
-  <p>Captured time: <b><span id="captured-time">--</span></b> | New total time: <b><span id="new-total">--</span></b></p>
-  <p>⚠️ You have one minute to collect — catch in: <b><span id="collect-timer">--</span></b></p>
+  <p>🧫 Collect the caught time!</p>
+  <p>Caught time: <b><span id="captured-time">--</span></b></p>
+  <p>⚠️ You have one minute — collect in: <b><span id="collect-timer">--</span></b></p>
   <progress id="collect-progress" value="60" max="60"></progress>
   <br><br>
   <button onclick="collect()">🫳 Collect time!</button>
@@ -78,9 +79,9 @@
 
 <hr>
 <div id="history-section">
-  <h2>Catch history</h2>
+  <h2>🗄️ Time collection</h2>
   <div id="history-list">
-    <p>No catches yet.</p>
+    <p>No items yet.</p>
   </div>
 </div>
 
