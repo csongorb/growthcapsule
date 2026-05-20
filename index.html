@@ -6,10 +6,10 @@
 <body>
 
 <h1>Catching Time</h1>
-<p>Time goes by. Catch it.<br/>
+<p>Time goes by. Catch as much as you can.<br/>
   <br/>
-  You can catch a certain amount of time. The longer you wait, to more you catch.<br/>
-  But take care, you only have one minute to catch the collected time. If you miss, that time frame will be forever gone.<br/>
+  You can catch a certain amount of time. The longer you wait, the more you catch.<br/>
+  You only have one minute to catch the collected time. If you miss, that time is be gone forever.<br/>
 <hr>
 
 <p><b>⏳ Time caught (total):</b> <span id="caught-total">0s</span> <small>(Lost: <span id="lost-total">0s</span>)</small></p>
@@ -71,9 +71,17 @@
 </div>
 
 <div id="lost-section" style="display:none">
-  <p>💨 The catch window closed.</p>
+  <p>💨 The catch is lost.</p>
   <p><b>Time lost:</b> <span id="lost-time">--</span></p>
-  <button onclick="reset()">🔄 Acknowledge loss</button>
+  <button onclick="reset()">🔄 Proceed</button>
+</div>
+
+<hr>
+<div id="history-section">
+  <h2>Catch history</h2>
+  <div id="history-list">
+    <p>No catches yet.</p>
+  </div>
 </div>
 
 <script src="script.js"></script>

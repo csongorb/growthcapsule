@@ -1,6 +1,6 @@
 const DEFAULT_CAUGHT_TIME = 0;
 const DEFAULT_CAPTURE_DURATION = 60;
-const COLLECT_TIME_SECONDS = 60;
+const COLLECT_TIME_SECONDS = 5;
 
 let caughtTime = DEFAULT_CAUGHT_TIME;
 let capturedDuration = 0;
@@ -10,6 +10,8 @@ let elapsed = 0;
 let isRunning = false;
 let timerInterval = null;
 let collectInterval = null;
+let catchHistory = [];
+let currentCatch = null;
 
 function formatClockTime(date) {
   const h = date.getHours().toString().padStart(2, "0");
@@ -43,6 +45,46 @@ function loadState() {
 function saveState() {
   setCookie("time_total", caughtTime);
   setCookie("time_lost_total", totalLostTime);
+}
+
+function addHistory(entry) {
+  catchHistory.unshift(entry);
+  renderHistory();
+}
+
+function renderHistory() {
+  const container = document.getElementById("history-list");
+  if (!container) return;
+  if (catchHistory.length === 0) {
+    container.innerHTML = "<p>No catches yet.</p>";
+    return;
+  }
+
+  container.innerHTML = catchHistory.map(entry => {
+    const start = formatDateTime(entry.startTime);
+    const end = entry.finishedAt ? formatDateTime(entry.finishedAt) : "--";
+    const timeframe = formatDuration(entry.duration);
+    let entryHtml = '<div class="history-entry">';
+
+    if (entry.status === "success") {
+      entryHtml += `<p><strong>You have collected: ${timeframe}</strong></p>`;
+      entryHtml += `<p>Start: ${start}</p>`;
+      entryHtml += `<p>End: ${end}</p>`;
+    } else if (entry.status === "canceled") {
+      const canceled = formatDateTime(entry.canceledAt);
+      entryHtml += '<p><strong>Catch canceled.</strong></p>';
+      entryHtml += `<p>Time lost: ${timeframe}</p>`;
+      entryHtml += `<p>Start: ${start}</p>`;
+      entryHtml += `<p>Canceled at: ${canceled}</p>`;
+    } else if (entry.status === "missed") {
+      entryHtml += `<p><strong>Catch lost: ${timeframe}</strong></p>`;
+      entryHtml += `<p>Start: ${start}</p>`;
+      entryHtml += `<p>End: ${end} — not collected properly.</p>`;
+    }
+
+    entryHtml += '</div>';
+    return entryHtml;
+  }).join('<hr>');
 }
 
 function updateRange() {
@@ -87,8 +129,18 @@ function startCatch() {
   const seconds = capturedDuration;
   lastCapture = capturedDuration;
   const newTotal = caughtTime + seconds;
+  const startTime = new Date();
+  const openTime = new Date(startTime.getTime() + seconds * 1000);
 
-  const openTime = new Date(Date.now() + seconds * 1000);
+  currentCatch = {
+    startTime,
+    expectedEndTime: openTime,
+    duration: seconds,
+    status: "running",
+    canceledAt: null,
+    finishedAt: null,
+  };
+
   document.getElementById("open-time").textContent = formatClockTime(openTime);
 
   document.getElementById("catch-section").style.display = "none";
@@ -133,6 +185,10 @@ function startCollectCountdown(newTotal) {
 
     if (remaining <= 0) {
       clearInterval(collectInterval);
+      if (currentCatch) {
+        currentCatch.status = "missed";
+        currentCatch.finishedAt = new Date();
+      }
       document.getElementById("caught-total").textContent = formatDuration(caughtTime);
       document.getElementById("lost-time").textContent = formatDuration(lastCapture);
       document.getElementById("collect-section").style.display = "none";
@@ -144,6 +200,12 @@ function startCollectCountdown(newTotal) {
 function collect() {
   clearInterval(collectInterval);
   caughtTime += capturedDuration;
+  if (currentCatch) {
+    currentCatch.status = "success";
+    currentCatch.finishedAt = new Date();
+    addHistory(currentCatch);
+    currentCatch = null;
+  }
   document.getElementById("caught-total").textContent = formatDuration(caughtTime);
   saveState();
   document.getElementById("collect-section").style.display = "none";
@@ -156,12 +218,25 @@ function cancelCatch() {
   clearInterval(timerInterval);
   timerInterval = null;
   lastCapture = elapsed;
+  if (currentCatch) {
+    currentCatch.status = "canceled";
+    currentCatch.canceledAt = new Date();
+    currentCatch.duration = elapsed;
+  }
   document.getElementById("lost-time").textContent = formatDuration(lastCapture);
   document.getElementById("catching-section").style.display = "none";
   document.getElementById("lost-section").style.display = "block";
 }
 
 function reset() {
+
+  if (currentCatch) {
+    if (currentCatch.status !== "success") {
+      addHistory(currentCatch);
+    }
+    currentCatch = null;
+  }
+
   totalLostTime += lastCapture;
   document.getElementById("lost-total").textContent = formatDuration(totalLostTime);
   saveState();
