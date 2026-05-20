@@ -40,11 +40,29 @@ function loadState() {
   if (!isNaN(savedLost)) {
     totalLostTime = savedLost;
   }
+  // Load history from cookie
+  const savedHistory = getCookie("catch_history");
+  if (savedHistory) {
+    try {
+      catchHistory = JSON.parse(savedHistory);
+      // Convert date strings back to Date objects
+      catchHistory.forEach(entry => {
+        entry.startTime = new Date(entry.startTime);
+        if (entry.canceledAt) entry.canceledAt = new Date(entry.canceledAt);
+        if (entry.finishedAt) entry.finishedAt = new Date(entry.finishedAt);
+      });
+      renderHistory();
+    } catch (e) {
+      console.error("Failed to parse catch history:", e);
+    }
+  }
 }
 
 function saveState() {
   setCookie("time_total", caughtTime);
   setCookie("time_lost_total", totalLostTime);
+  // Save history as JSON string
+  setCookie("catch_history", JSON.stringify(catchHistory));
 }
 
 function addHistory(entry) {
