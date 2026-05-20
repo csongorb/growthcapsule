@@ -5,18 +5,19 @@
 </head>
 <body>
 
-<h1>🧫 The Growth Capsule</h1>
-<p>Place your seeds inside, set the timer, and seal it. The longer the capsule runs, the more your seeds multiply.<br/>
-  When it opens, outside air immediately begins destroying the yield — you have <b>1 minute to collect</b> before it degrades completely.<br/>
-  Your original seeds are always safe.</p>
+<h1>Catching Time</h1>
+<p>Time goes by. Catch it.<br/>
+  <br/>
+  You can catch a certain amount of time. The longer you wait, to more you catch.<br/>
+  But take care, you only have one minute to catch the collected time. If you miss, that time frame will be forever gone.<br/>
 <hr>
 
-<p><b>🌱 Seeds:</b> <span id="money">1.0000</span> <small>(Lost: <span id="lost-total">0</span>)</small></p>
+<p><b>⏳ Time caught (total):</b> <span id="money">0s</span> <small>(Lost: <span id="lost-total">0s</span>)</small></p>
 
 <hr>
 
 <div id="invest-section">
-  <p><b>Set the capsule timer:</b></p>
+  <p><b>Set the catch timer:</b></p>
 
   <label>Timer range:</label>
   <select id="range-select" onchange="updateRange()">
@@ -38,53 +39,53 @@
 
   <table border="1" cellpadding="6">
     <tr>
-      <td>Capsule runtime</td>
+      <td>Catch duration</td>
       <td><b><span id="lbl-duration">--</span></b></td>
     </tr>
     <tr>
-      <td>Total growth</td>
-      <td><b>+<span id="lbl-pct">--</span>%</b></td>
+      <td>Capture rate</td>
+      <td><b><span id="lbl-pct">--</span>%</b></td>
     </tr>
     <tr>
-      <td>Yield</td>
-      <td><b>+<span id="lbl-profit">--</span></b></td>
+      <td>Expected catch</td>
+      <td><b><span id="lbl-profit">--</span></b></td>
     </tr>
     <tr>
-      <td>Growth rate</td>
-      <td><b>+<span id="lbl-persec">--</span></b> per second</td>
+      <td>Catch speed</td>
+      <td><b><span id="lbl-persec">--</span></b> per second</td>
     </tr>
     <tr>
-      <td>Growth formula</td>
-      <td>Yield = <span id="lbl-principal">--</span> × (1.01^(<span id="lbl-t">--</span> / 60) − 1)</td>
+      <td>Capture formula</td>
+      <td>Caught time = current total + <span id="lbl-t">--</span> seconds</td>
     </tr>
   </table>
 
   <br>
-  <button onclick="invest()">⏱️ Seal & Start Capsule</button>
+  <button onclick="invest()">⏱️ Start catching time</button>
 </div>
 
 <div id="investing-section" style="display:none">
-  <p><b>🫧 Growth Capsule is running...</b></p>
-  <p>Capsule opens in: <b><span id="timer">--</span></b> (at <b><span id="open-time">--</span></b>)</p>
-  <p>Expected yield: <b>+<span id="expected-profit">--</span></b></p>
+  <p><b>⏱️ Catching time...</b></p>
+  <p>Catch ends in: <b><span id="timer">--</span></b> (at <b><span id="open-time">--</span></b>)</p>
+  <p>Time to catch: <b><span id="expected-profit">--</span></b></p>
   <progress id="progress" value="0" max="100"></progress>
   <br><br>
-  <button onclick="cancelInvestment()">❌ Open Capsule (you will lose your yield)</button>
+  <button onclick="cancelInvestment()">❌ Stop catching (lose collected time)</button>
 </div>
 
 <div id="collect-section" style="display:none">
-  <p>🧫 The Growth Capsule has opened!</p>
-  <p>Yield: <b>+<span id="earned-profit">--</span></b> | New seed count might be: <b><span id="new-balance">--</span></b></p>
-  <p>⚠️ Outside air is degrading the yield — collect in: <b><span id="collect-timer">--</span></b></p>
+  <p>🧫 The catch window is open!</p>
+  <p>Captured time: <b><span id="earned-profit">--</span></b> | New total time: <b><span id="new-balance">--</span></b></p>
+  <p>⚠️ You have one minute to collect — catch in: <b><span id="collect-timer">--</span></b></p>
   <progress id="collect-progress" value="60" max="60"></progress>
   <br><br>
-  <button onclick="collect()">🫳 Collect yield!</button>
+  <button onclick="collect()">🫳 Collect time!</button>
 </div>
 
 <div id="lost-section" style="display:none">
-  <p>💨 The yield has degraded.</p>
-  <p><b>Seeds lost:</b> +<span id="lost-profit">--</span></p>
-  <button onclick="reset()">🔄 Process your lost</button>
+  <p>💨 The catch window closed.</p>
+  <p><b>Time lost:</b> <span id="lost-profit">--</span></p>
+  <button onclick="reset()">🔄 Acknowledge loss</button>
 </div>
 
 <script src="script.js"></script>

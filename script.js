@@ -1,14 +1,11 @@
-const DEFAULT_MONEY = 1;
-const GROWTH_FACTOR_PER_INTERVAL = 1.01;
-const GROWTH_INTERVAL_SECONDS = 360;
-const DEFAULT_INVEST_DURATION = 60;
+const DEFAULT_CAUGHT_TIME = 0;
+const DEFAULT_CAPTURE_DURATION = 60;
 const COLLECT_TIME_SECONDS = 60;
 
-let money = DEFAULT_MONEY;
-let investedAmount = 0;
-let lastSeconds = DEFAULT_INVEST_DURATION;
-let lastProfit = 0;
-let totalLost = 0;
+let caughtTime = DEFAULT_CAUGHT_TIME;
+let capturedDuration = 0;
+let lastCapture = 0;
+let totalLostTime = 0;
 let elapsed = 0;
 let isRunning = false;
 let timerInterval = null;
@@ -102,19 +99,19 @@ function getCookie(name) {
 }
 
 function loadState() {
-  const savedMoney = parseFloat(getCookie("seed_total"));
-  if (!isNaN(savedMoney)) {
-    money = savedMoney;
+  const savedTime = parseInt(getCookie("time_total"), 10);
+  if (!isNaN(savedTime)) {
+    caughtTime = savedTime;
   }
-  const savedLost = parseFloat(getCookie("seed_lost_total"));
+  const savedLost = parseInt(getCookie("time_lost_total"), 10);
   if (!isNaN(savedLost)) {
-    totalLost = savedLost;
+    totalLostTime = savedLost;
   }
 }
 
 function saveState() {
-  setCookie("seed_total", money);
-  setCookie("seed_lost_total", totalLost);
+  setCookie("time_total", caughtTime);
+  setCookie("time_lost_total", totalLostTime);
 }
 
 function updateRange() {
@@ -128,42 +125,32 @@ function updateRange() {
 }
 
 function updateSliderLabel() {
-  const seconds = parseInt(document.getElementById("duration").value);
-  const principal = money;
-  const multiplier = Math.pow(GROWTH_FACTOR_PER_INTERVAL, seconds / GROWTH_INTERVAL_SECONDS);
-  const growthFactor = multiplier - 1;
-  const profit = principal * growthFactor;
-  const profitPerSecond = profit / seconds;
-
+  const seconds = parseInt(document.getElementById("duration").value, 10);
   document.getElementById("lbl-duration").textContent = formatDuration(seconds);
-  document.getElementById("lbl-pct").textContent = (growthFactor * 100).toFixed(4);
-  document.getElementById("lbl-profit").textContent = formatNum(profit);
-  document.getElementById("lbl-persec").textContent = formatNum(profitPerSecond);
-  document.getElementById("lbl-principal").textContent = formatNum(principal);
+  document.getElementById("lbl-pct").textContent = "100.0000";
+  document.getElementById("lbl-profit").textContent = formatDuration(seconds);
+  document.getElementById("lbl-persec").textContent = formatNum(1);
+  document.getElementById("lbl-principal").textContent = formatDuration(caughtTime);
   document.getElementById("lbl-t").textContent = seconds;
-  document.getElementById("money").textContent = formatNum(money);
-  document.getElementById("lost-total").textContent = formatNum(totalLost);
+  document.getElementById("money").textContent = formatDuration(caughtTime);
+  document.getElementById("lost-total").textContent = formatDuration(totalLostTime);
 }
 
 loadState();
 updateSliderLabel();
 
 function invest() {
-  lastSeconds = parseInt(document.getElementById("duration").value);
-  const seconds = lastSeconds;
-  const currentMoney = money;
-  investedAmount = currentMoney;
-  const multiplier = Math.pow(GROWTH_FACTOR_PER_INTERVAL, seconds / GROWTH_INTERVAL_SECONDS);
-  const profit = currentMoney * (multiplier - 1);
-  lastProfit = profit;
-  const newBal = currentMoney * multiplier;
+  capturedDuration = parseInt(document.getElementById("duration").value, 10);
+  const seconds = capturedDuration;
+  lastCapture = capturedDuration;
+  const newTotal = caughtTime + seconds;
 
   const openTime = new Date(Date.now() + seconds * 1000);
   document.getElementById("open-time").textContent = formatClockTime(openTime);
 
   document.getElementById("invest-section").style.display = "none";
   document.getElementById("investing-section").style.display = "block";
-  document.getElementById("expected-profit").textContent = formatNum(profit);
+  document.getElementById("expected-profit").textContent = formatDuration(seconds);
 
   elapsed = 0;
   isRunning = true;
@@ -184,14 +171,14 @@ function invest() {
       isRunning = false;
       document.getElementById("investing-section").style.display = "none";
       document.getElementById("collect-section").style.display = "block";
-      document.getElementById("earned-profit").textContent = formatNum(profit);
-      document.getElementById("new-balance").textContent = formatNum(newBal);
-      startCollectCountdown(newBal);
+      document.getElementById("earned-profit").textContent = formatDuration(seconds);
+      document.getElementById("new-balance").textContent = formatDuration(newTotal);
+      startCollectCountdown(newTotal);
     }
   }, 1000);
 }
 
-function startCollectCountdown(newBalance) {
+function startCollectCountdown(newTotal) {
   let remaining = COLLECT_TIME_SECONDS;
   document.getElementById("collect-timer").textContent = remaining + "s";
   document.getElementById("collect-progress").value = remaining;
@@ -203,9 +190,8 @@ function startCollectCountdown(newBalance) {
 
     if (remaining <= 0) {
       clearInterval(collectInterval);
-      money = investedAmount;
-      document.getElementById("money").textContent = formatNum(money);
-      document.getElementById("lost-profit").textContent = formatNum(lastProfit);
+      document.getElementById("money").textContent = formatDuration(caughtTime);
+      document.getElementById("lost-profit").textContent = formatDuration(lastCapture);
       document.getElementById("collect-section").style.display = "none";
       document.getElementById("lost-section").style.display = "block";
     }
@@ -214,8 +200,8 @@ function startCollectCountdown(newBalance) {
 
 function collect() {
   clearInterval(collectInterval);
-  money = investedAmount * Math.pow(GROWTH_FACTOR_PER_INTERVAL, lastSeconds / GROWTH_INTERVAL_SECONDS);
-  document.getElementById("money").textContent = formatNum(money);
+  caughtTime += capturedDuration;
+  document.getElementById("money").textContent = formatDuration(caughtTime);
   saveState();
   document.getElementById("collect-section").style.display = "none";
   document.getElementById("invest-section").style.display = "block";
@@ -226,16 +212,15 @@ function cancelInvestment() {
   isRunning = false;
   clearInterval(timerInterval);
   timerInterval = null;
-  const actualProfit = investedAmount * (Math.pow(GROWTH_FACTOR_PER_INTERVAL, elapsed / GROWTH_INTERVAL_SECONDS) - 1);
-  lastProfit = actualProfit;
-  document.getElementById("lost-profit").textContent = formatNum(lastProfit);
+  lastCapture = elapsed;
+  document.getElementById("lost-profit").textContent = formatDuration(lastCapture);
   document.getElementById("investing-section").style.display = "none";
   document.getElementById("lost-section").style.display = "block";
 }
 
 function reset() {
-  totalLost += lastProfit;
-  document.getElementById("lost-total").textContent = formatNum(totalLost);
+  totalLostTime += lastCapture;
+  document.getElementById("lost-total").textContent = formatDuration(totalLostTime);
   saveState();
   document.getElementById("lost-section").style.display = "none";
   document.getElementById("invest-section").style.display = "block";
