@@ -145,6 +145,20 @@ setInterval(updateSliderLabel, 1000);
 function startCatch() {
   capturedDuration = parseInt(document.getElementById("duration").value, 10);
   const seconds = capturedDuration;
+  
+  // Force progress bar to reset completely
+  const progressEl = document.getElementById("progress");
+  const parent = progressEl.parentNode;
+  const nextSibling = progressEl.nextSibling;
+  parent.removeChild(progressEl);
+  
+  // Re-create the element with correct attributes
+  const newProgress = document.createElement("progress");
+  newProgress.id = "progress";
+  newProgress.value = "0";
+  newProgress.max = String(seconds);
+  parent.insertBefore(newProgress, nextSibling);
+  
   lastCapture = capturedDuration;
   const newTotal = caughtTime + seconds;
   const startTime = new Date();
