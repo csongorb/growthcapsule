@@ -165,20 +165,22 @@ function startCatch() {
   document.getElementById("catching-section").style.display = "block";
   document.getElementById("expected-time").textContent = formatDuration(seconds);
 
-  elapsed = 0;
+  // Store start timestamp instead of using elapsed counter
+  currentCatch.startTimestamp = Date.now();
   isRunning = true;
-  document.getElementById("timer").textContent = formatDuration(seconds);
-  document.getElementById("progress").max = seconds;
-  document.getElementById("progress").value = 0;
-
+  
   timerInterval = setInterval(function() {
     if (!isRunning) return;
-    elapsed++;
-    const remaining = seconds - elapsed;
+    
+    // Calculate actual elapsed time from real timestamps
+    const actualElapsed = Math.floor((Date.now() - currentCatch.startTimestamp) / 1000);
+    const remaining = Math.max(0, seconds - actualElapsed);
+    
+    elapsed = actualElapsed;
     document.getElementById("timer").textContent = formatDuration(remaining);
-    document.getElementById("progress").value = elapsed;
+    document.getElementById("progress").value = actualElapsed;
 
-    if (elapsed >= seconds) {
+    if (actualElapsed >= seconds) {
       clearInterval(timerInterval);
       timerInterval = null;
       isRunning = false;
@@ -187,21 +189,28 @@ function startCatch() {
       document.getElementById("captured-time").textContent = formatDuration(seconds);
       startCollectCountdown(newTotal);
     }
-  }, 1000);
+  }, 100); // Run more frequently to catch up quickly after sleep
 }
 
 function startCollectCountdown(newTotal) {
   let remaining = COLLECT_TIME_SECONDS;
   document.getElementById("collect-timer").textContent = remaining + "s";
   document.getElementById("collect-progress").value = remaining;
+  lastCapture = capturedDuration;
 
-  collectInterval = setInterval(function() {
-    remaining--;
+  // Store for real-time calculation
+  const catchEndTime = Date.now() + COLLECT_TIME_SECONDS * 1000;
+
+  function updateCollect() {
+    const now = Date.now();
+    remaining = Math.max(0, Math.floor((catchEndTime - now) / 1000));
+    
     document.getElementById("collect-timer").textContent = remaining + "s";
     document.getElementById("collect-progress").value = remaining;
 
     if (remaining <= 0) {
       clearInterval(collectInterval);
+      collectInterval = null;
       if (currentCatch) {
         currentCatch.status = "missed";
         currentCatch.finishedAt = new Date();
@@ -211,18 +220,32 @@ function startCollectCountdown(newTotal) {
       document.getElementById("collect-section").style.display = "none";
       document.getElementById("lost-section").style.display = "block";
     }
-  }, 1000);
+  }
+
+  // Run immediately to check if already expired due to sleep
+  updateCollect();
+  
+  collectInterval = setInterval(updateCollect, 100);
 }
 
 function collect() {
   clearInterval(collectInterval);
-  caughtTime += capturedDuration;
-  if (currentCatch) {
-    currentCatch.status = "success";
-    currentCatch.finishedAt = new Date();
-    addHistory(currentCatch);
-    currentCatch = null;
+  collectInterval = null;
+  
+  // Check if collection window already expired
+  if (!currentCatch || currentCatch.status !== "running") {
+    // Window expired - this shouldn't normally be clickable but safety check
+    document.getElementById("collect-section").style.display = "none";
+    document.getElementById("lost-section").style.display = "block";
+    return;
   }
+  
+  caughtTime += capturedDuration;
+  currentCatch.status = "success";
+  currentCatch.finishedAt = new Date();
+  addHistory(currentCatch);
+  currentCatch = null;
+  
   document.getElementById("caught-total").textContent = formatDuration(caughtTime);
   saveState();
   document.getElementById("collect-section").style.display = "none";
