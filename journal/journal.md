@@ -66,3 +66,20 @@ A roguelike. How far can you send them?
 Speed is incremental? You add to the speed with each stretch? Each stretch IS the distance?
 
 Lots of ideas. No direction.
+
+## 2026-05-20: Catching time!
+
+I think I have it!  
+After some contemplation, dissatisfaction with all directions, suddently there it was. And I swear that even though the idea just hit me yesterday, I have no memory of how it happened. It was just there. And it works, beautifully. I like the simplicity.  
+At least that's how I feel currently.
+
+But it's all much less emotional, feels flat. Happy that the incrementality is gone, but I need some progression, something to work towards and to look forward to.  
+And a few more elements of fiction.
+
+Ideas (not sure about any of them):
+
+- achievements
+- adding names (and categories) to collected items
+- the maximum amount of time you can collect at onec is limited by the total time you have collected
+
+We'll see...
