@@ -82,7 +82,7 @@ function renderHistory() {
     const start = formatDateTime(entry.startTime);
     const end = entry.finishedAt ? formatDateTime(entry.finishedAt) : "--";
     const timeframe = formatDuration(entry.duration);
-    let entryHtml = '<div class="history-entry">';
+    let entryHtml = '<div class="history-entry ' + entry.status + '">';
 
     if (entry.status === "success") {
       entryHtml += `<p><strong>You have collected: ${timeframe}</strong></p>`;

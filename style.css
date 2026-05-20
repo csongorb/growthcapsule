@@ -5,3 +5,7 @@ body {
    line-height: 1.2;
    padding: 12px;
 }
+
+.history-entry.success { color: rgb(0, 140, 0); }
+.history-entry.canceled { color: rgb(180, 0, 0); }
+.history-entry.missed { color: rgb(180, 0, 0); }
