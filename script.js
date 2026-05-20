@@ -1,6 +1,6 @@
 const DEFAULT_CAUGHT_TIME = 0;
 const DEFAULT_CAPTURE_DURATION = 60;
-const COLLECT_TIME_SECONDS = 5;
+const COLLECT_TIME_SECONDS = 60;
 
 let caughtTime = DEFAULT_CAUGHT_TIME;
 let capturedDuration = 0;
