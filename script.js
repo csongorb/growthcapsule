@@ -1,8 +1,6 @@
-const DEFAULT_CAUGHT_TIME = 0;
-const DEFAULT_CAPTURE_DURATION = 60;
 const COLLECT_TIME_SECONDS = 60;
 
-let totalCollectedSeconds = DEFAULT_CAUGHT_TIME;
+let totalCollectedSeconds = 0;
 
 let totalLostTime = 0;
 let elapsed = 0;
@@ -207,20 +205,21 @@ function updateSliderLabel() {
   document.getElementById("lost-total").textContent = formatDuration(totalLostTime);
 }
 
+document.getElementById("range-select").addEventListener("change", updateRange);
+document.getElementById("duration").addEventListener("input", updateSliderLabel);
+document.getElementById("start-catch-btn").addEventListener("click", startCatch);
+document.getElementById("cancel-catch-btn").addEventListener("click", cancelCatch);
+document.getElementById("collect-btn").addEventListener("click", collect);
+document.getElementById("reset-btn").addEventListener("click", reset);
+
 loadState();
 updateSliderLabel();
 setInterval(updateSliderLabel, 1000);
 
 function setupProgressBar(duration) {
   const progressEl = document.getElementById("progress");
-  const parent = progressEl.parentNode;
-  const nextSibling = progressEl.nextSibling;
-  parent.removeChild(progressEl);
-  const newProgress = document.createElement("progress");
-  newProgress.id = "progress";
-  newProgress.value = "0";
-  newProgress.max = String(duration);
-  parent.insertBefore(newProgress, nextSibling);
+  progressEl.max = duration;
+  progressEl.value = 0;
 }
 
 function startCatchTimer(startTimestamp, duration, catchEndTime) {

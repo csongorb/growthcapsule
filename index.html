@@ -21,7 +21,7 @@
   <p><b>Set the catch timer:</b></p>
 
   <label>Timer range:</label>
-  <select id="range-select" onchange="updateRange()">
+  <select id="range-select">
     <option value="600">10 minutes</option>
     <option value="3600">1 hour</option>
     <option value="21600">6 hours</option>
@@ -35,7 +35,7 @@
   </select>
 
   <br><br>
-  <input type="range" id="duration" min="1" max="600" step="1" value="60" oninput="updateSliderLabel()">
+  <input type="range" id="duration" min="1" max="600" step="1" value="60">
   <br><br>
 
   <table border="1" cellpadding="6">
@@ -50,7 +50,7 @@
   </table>
 
   <br>
-  <button onclick="startCatch()">⏱️ Start catching time</button>
+  <button id="start-catch-btn">⏱️ Start catching time</button>
 </div>
 
 <div id="catching-section" style="display:none">
@@ -59,7 +59,7 @@
   <p>Time to catch: <b><span id="expected-time">--</span></b></p>
   <progress id="progress" value="0" max="100"></progress>
   <br><br>
-  <button onclick="cancelCatch()">❌ Stop catching (lose already caught time)</button>
+  <button id="cancel-catch-btn">❌ Stop catching (lose already caught time)</button>
 </div>
 
 <div id="collect-section" style="display:none">
@@ -68,13 +68,13 @@
   <p>⚠️ You have one minute — collect in: <b><span id="collect-timer">--</span></b></p>
   <progress id="collect-progress" value="60" max="60"></progress>
   <br><br>
-  <button onclick="collect()">🫳 Collect time!</button>
+  <button id="collect-btn">🫳 Collect time!</button>
 </div>
 
 <div id="lost-section" style="display:none">
   <p>💨 The catch is lost.</p>
   <p><b>Time lost:</b> <span id="lost-time">--</span></p>
-  <button onclick="reset()">🔄 Proceed</button>
+  <button id="reset-btn">🔄 Proceed</button>
 </div>
 
 <hr>
