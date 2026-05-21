@@ -31,21 +31,28 @@ function getCookie(name) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
+function saveRunningCatch() {
+  setCookie("running_catch", JSON.stringify({
+    startTimestamp: currentCatch.startTimestamp,
+    duration: currentCatch.duration
+  }));
+}
+
+function clearRunningCatch() {
+  document.cookie = "running_catch=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/";
+}
+
 function loadState() {
   const savedTime = parseInt(getCookie("time_total"), 10);
-  if (!isNaN(savedTime)) {
-    caughtTime = savedTime;
-  }
+  if (!isNaN(savedTime)) caughtTime = savedTime;
+
   const savedLost = parseInt(getCookie("time_lost_total"), 10);
-  if (!isNaN(savedLost)) {
-    totalLostTime = savedLost;
-  }
-  // Load history from cookie
+  if (!isNaN(savedLost)) totalLostTime = savedLost;
+
   const savedHistory = getCookie("catch_history");
   if (savedHistory) {
     try {
       catchHistory = JSON.parse(savedHistory);
-      // Convert date strings back to Date objects
       catchHistory.forEach(entry => {
         entry.startTime = new Date(entry.startTime);
         if (entry.canceledAt) entry.canceledAt = new Date(entry.canceledAt);
@@ -56,12 +63,74 @@ function loadState() {
       console.error("Failed to parse catch history:", e);
     }
   }
+
+  const savedCatch = getCookie("running_catch");
+  if (savedCatch) {
+    try {
+      const { startTimestamp, duration, canceled } = JSON.parse(savedCatch);
+
+      capturedDuration = duration;
+      lastCapture = duration;
+
+      if (canceled) {
+        currentCatch = {
+          startTime: new Date(startTimestamp),
+          startTimestamp,
+          expectedEndTime: new Date(startTimestamp + duration * 1000),
+          duration,
+          status: "canceled",
+          canceledAt: new Date(startTimestamp + duration * 1000),
+          finishedAt: null,
+        };
+        document.getElementById("lost-time").textContent = formatDuration(duration);
+        document.getElementById("catch-section").style.display = "none";
+        document.getElementById("lost-section").style.display = "block";
+        return;
+      }
+
+      const now = Date.now();
+      const catchEndTime = startTimestamp + duration * 1000;
+      const collectDeadline = catchEndTime + COLLECT_TIME_SECONDS * 1000;
+
+      currentCatch = {
+        startTime: new Date(startTimestamp),
+        startTimestamp,
+        expectedEndTime: new Date(catchEndTime),
+        duration,
+        status: "running",
+        canceledAt: null,
+        finishedAt: null,
+      };
+
+      if (now < catchEndTime) {
+        setupProgressBar(duration);
+        document.getElementById("open-time").textContent = formatClockTime(new Date(catchEndTime));
+        document.getElementById("expected-time").textContent = formatDuration(duration);
+        document.getElementById("catch-section").style.display = "none";
+        document.getElementById("catching-section").style.display = "block";
+        startCatchTimer(startTimestamp, duration, catchEndTime);
+      } else if (now < collectDeadline) {
+        document.getElementById("captured-time").textContent = formatDuration(duration);
+        document.getElementById("catch-section").style.display = "none";
+        document.getElementById("collect-section").style.display = "block";
+        startCollectCountdown(collectDeadline);
+      } else {
+        // Collect window already passed — show lost screen; history/state saved on reset()
+        currentCatch.status = "missed";
+        currentCatch.finishedAt = new Date(collectDeadline);
+        document.getElementById("lost-time").textContent = formatDuration(duration);
+        document.getElementById("catch-section").style.display = "none";
+        document.getElementById("lost-section").style.display = "block";
+      }
+    } catch (e) {
+      console.error("Failed to parse running catch:", e);
+    }
+  }
 }
 
 function saveState() {
   setCookie("time_total", caughtTime);
   setCookie("time_lost_total", totalLostTime);
-  // Save history as JSON string
   setCookie("catch_history", JSON.stringify(catchHistory));
 }
 
@@ -142,86 +211,78 @@ loadState();
 updateSliderLabel();
 setInterval(updateSliderLabel, 1000);
 
-function startCatch() {
-  capturedDuration = parseInt(document.getElementById("duration").value, 10);
-  const seconds = capturedDuration;
-  
-  // Force progress bar to reset completely
+function setupProgressBar(duration) {
   const progressEl = document.getElementById("progress");
   const parent = progressEl.parentNode;
   const nextSibling = progressEl.nextSibling;
   parent.removeChild(progressEl);
-  
-  // Re-create the element with correct attributes
   const newProgress = document.createElement("progress");
   newProgress.id = "progress";
   newProgress.value = "0";
-  newProgress.max = String(seconds);
+  newProgress.max = String(duration);
   parent.insertBefore(newProgress, nextSibling);
-  
-  lastCapture = capturedDuration;
-  const newTotal = caughtTime + seconds;
-  const startTime = new Date();
-  const openTime = new Date(startTime.getTime() + seconds * 1000);
+}
 
-  currentCatch = {
-    startTime,
-    expectedEndTime: openTime,
-    duration: seconds,
-    status: "running",
-    canceledAt: null,
-    finishedAt: null,
-  };
-
-  document.getElementById("open-time").textContent = formatClockTime(openTime);
-
-  document.getElementById("catch-section").style.display = "none";
-  document.getElementById("catching-section").style.display = "block";
-  document.getElementById("expected-time").textContent = formatDuration(seconds);
-
-  // Store start timestamp instead of using elapsed counter
-  currentCatch.startTimestamp = Date.now();
+function startCatchTimer(startTimestamp, duration, catchEndTime) {
   isRunning = true;
-  
-  timerInterval = setInterval(function() {
+
+  function tick() {
     if (!isRunning) return;
-    
-    // Calculate actual elapsed time from real timestamps
-    const actualElapsed = Math.floor((Date.now() - currentCatch.startTimestamp) / 1000);
-    const remaining = Math.max(0, seconds - actualElapsed);
-    
+    const actualElapsed = Math.floor((Date.now() - startTimestamp) / 1000);
+    const remaining = Math.max(0, duration - actualElapsed);
     elapsed = actualElapsed;
     document.getElementById("timer").textContent = formatDuration(remaining);
     document.getElementById("progress").value = actualElapsed;
-
-    if (actualElapsed >= seconds) {
+    if (actualElapsed >= duration) {
       clearInterval(timerInterval);
       timerInterval = null;
       isRunning = false;
       document.getElementById("catching-section").style.display = "none";
       document.getElementById("collect-section").style.display = "block";
-      document.getElementById("captured-time").textContent = formatDuration(seconds);
-      startCollectCountdown(newTotal);
+      document.getElementById("captured-time").textContent = formatDuration(duration);
+      startCollectCountdown(catchEndTime + COLLECT_TIME_SECONDS * 1000);
     }
-  }, 100); // Run more frequently to catch up quickly after sleep
+  }
+
+  timerInterval = setInterval(tick, 100);
+  tick();
 }
 
-function startCollectCountdown(newTotal) {
-  let remaining = COLLECT_TIME_SECONDS;
-  document.getElementById("collect-timer").textContent = remaining + "s";
-  document.getElementById("collect-progress").value = remaining;
-  lastCapture = capturedDuration;
+function startCatch() {
+  capturedDuration = parseInt(document.getElementById("duration").value, 10);
+  const duration = capturedDuration;
 
-  // Store for real-time calculation
-  const catchEndTime = Date.now() + COLLECT_TIME_SECONDS * 1000;
+  setupProgressBar(duration);
+  lastCapture = duration;
 
+  const startTimestamp = Date.now();
+  const catchEndTime = startTimestamp + duration * 1000;
+
+  currentCatch = {
+    startTime: new Date(startTimestamp),
+    startTimestamp,
+    expectedEndTime: new Date(catchEndTime),
+    duration,
+    status: "running",
+    canceledAt: null,
+    finishedAt: null,
+  };
+
+  saveRunningCatch();
+
+  document.getElementById("open-time").textContent = formatClockTime(new Date(catchEndTime));
+  document.getElementById("catch-section").style.display = "none";
+  document.getElementById("catching-section").style.display = "block";
+  document.getElementById("expected-time").textContent = formatDuration(duration);
+
+  startCatchTimer(startTimestamp, duration, catchEndTime);
+}
+
+function startCollectCountdown(collectDeadline) {
   function updateCollect() {
-    const now = Date.now();
-    remaining = Math.max(0, Math.floor((catchEndTime - now) / 1000));
-    
+    const remaining = Math.max(0, Math.floor((collectDeadline - Date.now()) / 1000));
     document.getElementById("collect-timer").textContent = remaining + "s";
     document.getElementById("collect-progress").value = remaining;
-
     if (remaining <= 0) {
       clearInterval(collectInterval);
       collectInterval = null;
@@ -235,31 +296,27 @@ function startCollectCountdown(newTotal) {
       document.getElementById("lost-section").style.display = "block";
     }
   }
-
-  // Run immediately to check if already expired due to sleep
   updateCollect();
-  
   collectInterval = setInterval(updateCollect, 100);
 }
 
 function collect() {
   clearInterval(collectInterval);
   collectInterval = null;
-  
-  // Check if collection window already expired
+
   if (!currentCatch || currentCatch.status !== "running") {
-    // Window expired - this shouldn't normally be clickable but safety check
     document.getElementById("collect-section").style.display = "none";
     document.getElementById("lost-section").style.display = "block";
     return;
   }
-  
+
   caughtTime += capturedDuration;
   currentCatch.status = "success";
   currentCatch.finishedAt = new Date();
   addHistory(currentCatch);
   currentCatch = null;
-  
+  clearRunningCatch();
+
   document.getElementById("caught-total").textContent = formatDuration(caughtTime);
   saveState();
   document.getElementById("collect-section").style.display = "none";
@@ -276,6 +333,13 @@ function cancelCatch() {
     currentCatch.status = "canceled";
     currentCatch.canceledAt = new Date();
     currentCatch.duration = elapsed;
+    setCookie("running_catch", JSON.stringify({
+      startTimestamp: currentCatch.startTimestamp,
+      duration: elapsed,
+      canceled: true
+    }));
+  } else {
+    clearRunningCatch();
   }
   document.getElementById("lost-time").textContent = formatDuration(lastCapture);
   document.getElementById("catching-section").style.display = "none";
@@ -283,14 +347,13 @@ function cancelCatch() {
 }
 
 function reset() {
-
   if (currentCatch) {
     if (currentCatch.status !== "success") {
       addHistory(currentCatch);
     }
     currentCatch = null;
   }
-
+  clearRunningCatch();
   totalLostTime += lastCapture;
   document.getElementById("lost-total").textContent = formatDuration(totalLostTime);
   saveState();

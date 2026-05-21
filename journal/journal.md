@@ -89,3 +89,8 @@ We'll see...
 Just a new idea I don't want to forget:  
 I could used the cookie-caused limitation of the amount entries into the history to my advantage: the player could curate the time-items in her collection (deleting, grouping, adding).  
 Could add to the potential identification...
+
+## 2026-05-21b: Vibe Coding (Claude)
+
+I have a good experience with vibe coding this, I'm learning a lot, about controlling AI well, how to ensure I still understand how everything works, when do I need to work against it (see metaphor), but... I still feel miserable in many ways.  
+I try to tell myself I'm doing it to learn for my students, but my experience is too good for that.
