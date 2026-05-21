@@ -3,7 +3,7 @@ const COLLECT_TIME_SECONDS = 60;
 let totalCollectedSeconds = 0;
 
 let totalLostTime = 0;
-let elapsed = 0;
+
 let isRunning = false;
 let timerInterval = null;
 let collectInterval = null;
@@ -36,10 +36,11 @@ function getCookie(name) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-function saveRunningCatch() {
+function saveRunningCatch(canceled = false) {
   setCookie("running_catch", JSON.stringify({
     startTimestamp: currentCatch.startTimestamp,
-    duration: currentCatch.duration
+    duration: currentCatch.duration,
+    ...(canceled && { canceled: true })
   }));
 }
 
@@ -229,7 +230,6 @@ function startCatchTimer(startTimestamp, duration, catchEndTime) {
     if (!isRunning) return;
     const actualElapsed = Math.floor((Date.now() - startTimestamp) / 1000);
     const remaining = Math.max(0, duration - actualElapsed);
-    elapsed = actualElapsed;
     document.getElementById("timer").textContent = formatDuration(remaining);
     document.getElementById("progress").value = actualElapsed;
     if (actualElapsed >= duration) {
@@ -323,12 +323,8 @@ function cancelCatch() {
   if (currentCatch) {
     currentCatch.status = "canceled";
     currentCatch.canceledAt = new Date();
-    currentCatch.duration = elapsed;
-    setCookie("running_catch", JSON.stringify({
-      startTimestamp: currentCatch.startTimestamp,
-      duration: elapsed,
-      canceled: true
-    }));
+    currentCatch.duration = Math.floor((Date.now() - currentCatch.startTimestamp) / 1000);
+    saveRunningCatch(true);
   } else {
     clearRunningCatch();
   }
