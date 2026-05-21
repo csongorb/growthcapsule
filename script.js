@@ -10,7 +10,7 @@ let collectInterval = null;
 let catchHistory = [];
 let currentCatch = null;
 
-const SECTIONS = ["catch-section", "catching-section", "collect-section", "lost-section"];
+const SECTIONS = ["catch-section", "catching-section", "collect-section", "name-section", "lost-section"];
 
 function showSection(id) {
   SECTIONS.forEach(s => {
@@ -36,12 +36,17 @@ function getCookie(name) {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-function saveRunningCatch(canceled = false) {
-  setCookie("running_catch", JSON.stringify({
+function saveRunningCatch(canceled = false, collected = false) {
+  const data = {
     startTimestamp: currentCatch.startTimestamp,
     duration: currentCatch.duration,
-    ...(canceled && { canceled: true })
-  }));
+  };
+  if (canceled) data.canceled = true;
+  if (collected) {
+    data.collected = true;
+    data.finishedAt = currentCatch.finishedAt.getTime();
+  }
+  setCookie("running_catch", JSON.stringify(data));
 }
 
 function clearRunningCatch() {
@@ -60,7 +65,7 @@ function loadState() {
     try {
       catchHistory = JSON.parse(savedHistory);
       catchHistory.forEach(entry => {
-        entry.startTime = new Date(entry.startTime);
+        entry.startTime = new Date(entry.startTimestamp);
         if (entry.canceledAt) entry.canceledAt = new Date(entry.canceledAt);
         if (entry.finishedAt) entry.finishedAt = new Date(entry.finishedAt);
       });
@@ -73,7 +78,7 @@ function loadState() {
   const savedCatch = getCookie("running_catch");
   if (savedCatch) {
     try {
-      const { startTimestamp, duration, canceled } = JSON.parse(savedCatch);
+      const { startTimestamp, duration, canceled, collected, finishedAt: collectedAt } = JSON.parse(savedCatch);
 
       if (canceled) {
         currentCatch = {
@@ -87,6 +92,21 @@ function loadState() {
         };
         document.getElementById("lost-time").textContent = formatDuration(duration);
         showSection("lost-section");
+        return;
+      }
+
+      if (collected) {
+        currentCatch = {
+          startTime: new Date(startTimestamp),
+          startTimestamp,
+          expectedEndTime: new Date(startTimestamp + duration * 1000),
+          duration,
+          status: "success",
+          canceledAt: null,
+          finishedAt: collectedAt ? new Date(collectedAt) : new Date(),
+        };
+        document.getElementById("name-caught-time").textContent = formatDuration(duration);
+        showSection("name-section");
         return;
       }
 
@@ -130,7 +150,14 @@ function loadState() {
 function saveState() {
   setCookie("time_total", totalCollectedSeconds);
   setCookie("time_lost_total", totalLostTime);
-  setCookie("catch_history", JSON.stringify(catchHistory));
+  const compact = catchHistory.map(e => {
+    const c = { startTimestamp: e.startTimestamp, duration: e.duration, status: e.status };
+    if (e.canceledAt) c.canceledAt = e.canceledAt;
+    if (e.finishedAt) c.finishedAt = e.finishedAt;
+    if (e.name) c.name = e.name;
+    return c;
+  });
+  setCookie("catch_history", JSON.stringify(compact));
 }
 
 function addHistory(entry) {
@@ -153,7 +180,7 @@ function renderHistory() {
     let entryHtml = '<div class="history-entry ' + entry.status + '">';
 
     if (entry.status === "success") {
-      entryHtml += `<p><strong>You have collected: ${timeframe}</strong></p>`;
+      entryHtml += `<p><strong>${entry.name}: ${timeframe}</strong></p>`;
       entryHtml += `<p>Start: ${start}</p>`;
       entryHtml += `<p>End: ${end}</p>`;
     } else if (entry.status === "canceled") {
@@ -212,6 +239,7 @@ document.getElementById("start-catch-btn").addEventListener("click", startCatch)
 document.getElementById("cancel-catch-btn").addEventListener("click", cancelCatch);
 document.getElementById("collect-btn").addEventListener("click", collect);
 document.getElementById("reset-btn").addEventListener("click", reset);
+document.getElementById("submit-name-btn").addEventListener("click", submitName);
 
 loadState();
 updateSliderLabel();
@@ -306,11 +334,21 @@ function collect() {
   totalCollectedSeconds += currentCatch.duration;
   currentCatch.status = "success";
   currentCatch.finishedAt = new Date();
+  setCookie("time_total", totalCollectedSeconds);
+  saveRunningCatch(false, true);
+
+  document.getElementById("caught-total").textContent = formatDuration(totalCollectedSeconds);
+  document.getElementById("name-caught-time").textContent = formatDuration(currentCatch.duration);
+  document.getElementById("catch-name-input").value = "";
+  showSection("name-section");
+}
+
+function submitName() {
+  const name = document.getElementById("catch-name-input").value.trim();
+  if (name) currentCatch.name = name;
   addHistory(currentCatch);
   currentCatch = null;
   clearRunningCatch();
-
-  document.getElementById("caught-total").textContent = formatDuration(totalCollectedSeconds);
   saveState();
   showSection("catch-section");
   updateSliderLabel();
