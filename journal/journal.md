@@ -83,3 +83,9 @@ Ideas (not sure about any of them):
 - the maximum amount of time you can collect at onec is limited by the total time you have collected
 
 We'll see...
+
+## 2026-05-21: Curation
+
+Just a new idea I don't want to forget:  
+I could used the cookie-caused limitation of the amount entries into the history to my advantage: the player could curate the time-items in her collection (deleting, grouping, adding).  
+Could add to the potential identification...
